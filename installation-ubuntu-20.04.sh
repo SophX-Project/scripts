@@ -85,29 +85,8 @@ chown www-data:www-data -R bootstrap/cache public/uploads storage && chmod -R 75
 rm /etc/nginx/sites-available/default
 cat >/etc/nginx/sites-available/default <<EOL
 server {
-  listen 80;
-  listen [::]:80;
-
-  root /var/www/html;
-  index index.html index.htm index.nginx-debian.html;
-  server_name _;
-
-  location / {
-    try_files $uri $uri/ =404;
-  }
-
-  location /bookstack/ {
-    proxy_pass http://localhost:8083/;
-    proxy_redirect off;
-  }
-
-}
-EOL
-
-cat >/etc/nginx/sites-available/bookstack <<EOL
-server {
-  listen 8083;
-  listen [::]:8083;
+  listen 8080;
+  listen [::]:8080;
 
   server_name localhost;
 
@@ -117,20 +96,34 @@ server {
   location / {
     try_files $uri $uri/ /index.php?$query_string;
   }
-
+  
   location ~ \.php$ {
     include snippets/fastcgi-php.conf;
     fastcgi_pass unix:/run/php/php7.4-fpm.sock;
   }
 }
-EOL
 
-ln -s /etc/nginx/sites-available/bookstack /etc/nginx/sites-enabled/
+
+server {
+  listen 80;
+  listen [::]:80;
+
+  server_name _;
+
+  root /var/www/html;
+  index index.html;
+
+  location /bookstack/ {
+    proxy_pass http://localhost:8080/;
+    proxy_redirect off;
+  }
+  
+}
+EOL
 
 # Restart apache to load new config
 nginx -t
 systemctl restart nginx
-systemctl status nginx
 
 echo ""
 echo "Setup Finished, Your BookStack instance should now be installed."
@@ -138,4 +131,4 @@ echo "You can login with the email 'admin@admin.com' and password of 'password'"
 echo "MySQL was installed without a root password, It is recommended that you set a root MySQL password."
 echo ""
 echo "You can access ubuntu apache html at: http://$DOMAIN"
-echo "You can access your BookStack instance at: http://$DOMAIN/bookstack"
+echo "You can access your BookStack instance at: http://$DOMAIN/bookstack/login"
