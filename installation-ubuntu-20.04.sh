@@ -122,6 +122,7 @@ server {
 EOL
 
 # Restart apache to load new config
+service apache2 stop
 nginx -t
 systemctl restart nginx
 
